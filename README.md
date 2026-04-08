@@ -70,21 +70,27 @@ I use it day to day. Wiring it up here would add noise without adding anything i
 
 ## 4. Test scenarios
 
-Characterisation tests first, written against the original `PaymentService` to pin every execution path before I touch any production code.
+The intention was to write characterisation tests against the original `PaymentService` first, then refactor, then confirm they still pass. In practice the original code makes that only partially possible.
+
+Both data stores return `new Account()` with default values — no flags set, balance zero. There's no way to inject an account in any other state without changing production code. That means the null-account case is unreachable (the store never returns null), and the happy paths are unreachable (the scheme flag will never be set). The three failure cases caused by missing flags are the only paths observable from outside the class.
+
+The scenarios below are the full intended suite. Those marked can be written against the original; the rest require injection and are written after the refactor.
 
 **Bacs**
-- Account exists, Bacs flag set → success, balance decremented
-- Account is null → failure
-- Bacs flag not set → failure
+- Bacs flag not set → failure ✓ characterisation
+- Account is null → failure (requires injection)
+- Account exists, Bacs flag set → success, balance decremented (requires injection)
 
 **FasterPayments**
-- Account exists, flag set, balance sufficient → success, balance decremented
-- Account is null → failure
-- FasterPayments flag not set → failure
-- Balance less than payment amount → failure
+- FasterPayments flag not set → failure ✓ characterisation
+- Account is null → failure (requires injection)
+- Balance less than payment amount → failure (requires injection)
+- Account exists, flag set, balance sufficient → success, balance decremented (requires injection)
 
 **Chaps**
-- Account exists, flag set, status is Live → success, balance decremented
-- Account is null → failure
-- Chaps flag not set → failure
-- Account status not Live → failure 
+- Chaps flag not set → failure ✓ characterisation
+- Account is null → failure (requires injection)
+- Account status not Live → failure (requires injection)
+- Account exists, flag set, status is Live → success, balance decremented (requires injection)
+
+The balance-deduction logic has no characterisation coverage at all. If that code were broken during the refactor, nothing would catch it until the post-refactor unit tests are written. That's a known gap, not an oversight.
