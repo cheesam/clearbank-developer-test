@@ -35,7 +35,7 @@ namespace ClearBank.DeveloperTest.Services
 
             if (result.Success)
             {
-                account.Balance -= request.Amount;
+                account.Debit(request.Amount);
                 _accountDataStore.UpdateAccount(account);
             }
 
