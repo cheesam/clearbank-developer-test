@@ -31,8 +31,10 @@ namespace ClearBank.DeveloperTest.Tests
                 .Returns(Account);
         }
 
+        protected IPaymentService CreateService() =>
+            new PaymentService(AccountDataStore.Object, new PaymentValidatorFactory());
+
         protected MakePaymentResult MakePayment() =>
-            new PaymentService(AccountDataStore.Object, new PaymentValidatorFactory())
-                .MakePayment(Request);
+            CreateService().MakePayment(Request);
     }
 }
