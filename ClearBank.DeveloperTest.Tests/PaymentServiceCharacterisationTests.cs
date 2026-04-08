@@ -1,5 +1,7 @@
+using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Services;
 using ClearBank.DeveloperTest.Types;
+using Moq;
 using Shouldly;
 using Xunit;
 
@@ -7,7 +9,17 @@ namespace ClearBank.DeveloperTest.Tests
 {
     public class PaymentServiceCharacterisationTests
     {
-        private readonly IPaymentService _paymentService = new PaymentService();
+        private readonly IPaymentService _paymentService;
+
+        public PaymentServiceCharacterisationTests()
+        {
+            var accountDataStore = new Mock<IAccountDataStore>();
+            accountDataStore
+                .Setup(x => x.GetAccount(It.IsAny<string>()))
+                .Returns(new Account());
+
+            _paymentService = new PaymentService(accountDataStore.Object, new PaymentValidatorFactory());
+        }
 
         [Fact]
         public void MakePayment_BacsFlagNotSet_ReturnsFailure()
