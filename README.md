@@ -58,6 +58,22 @@ The factory holds a `Dictionary<PaymentScheme, IPaymentValidator>` populated at 
 
 `PaymentService` takes `IAccountDataStore` and `IPaymentValidatorFactory` in its constructor. Nothing is instantiated inside the class.
 
+**`PaymentValidatorFactory` accepts `IDictionary<PaymentScheme, IPaymentValidator>`**
+
+The dictionary is passed in rather than built internally. The factory has no knowledge of which validators exist; the caller owns the wiring. This keeps the factory open for extension without any changes to the class itself.
+
+**`[Flags]` on `AllowedPaymentSchemes`**
+
+The enum was already used as a flags enum (bitwise values, `HasFlag` checks) but was missing the attribute. Added for correctness — it affects serialisation behaviour and `ToString()` output, and makes the intent explicit.
+
+**Input guards on `MakePayment`**
+
+A null request throws `ArgumentNullException`. A non-positive amount returns failure immediately. Both are boundary checks at the entry point of the method.
+
+**`Account.Debit`**
+
+Balance mutation moved into the domain object. `Debit` throws `InvalidOperationException` if the amount exceeds the balance, giving `Account` some self-protection rather than leaving that concern to the caller.
+
 **No Clean Architecture**
 
 In a production service I'd want a proper domain/application/infrastructure split. For an exercise with one service class, that layering adds more overhead than it demonstrates. I didn't want the architecture to become the story when the SOLID work is the actual point.
@@ -94,3 +110,18 @@ The scenarios below are the full intended suite. Those marked can be written aga
 - Account exists, flag set, status is Live → success, balance decremented (requires injection)
 
 The balance-deduction logic has no characterisation coverage at all. If that code were broken during the refactor, nothing would catch it until the post-refactor unit tests are written. That's a known gap, not an oversight.
+
+**Input guards**
+- Null request → throws `ArgumentNullException`
+- Zero amount → failure
+- Negative amount → failure
+
+**`Account.Debit`**
+- Valid amount → balance decremented
+- Amount exceeds balance → throws `InvalidOperationException`
+
+**`PaymentValidatorFactory`**
+- Bacs scheme → returns `BacsPaymentValidator`
+- FasterPayments scheme → returns `FasterPaymentsPaymentValidator`
+- Chaps scheme → returns `ChapsPaymentValidator`
+- Unregistered scheme → returns null
