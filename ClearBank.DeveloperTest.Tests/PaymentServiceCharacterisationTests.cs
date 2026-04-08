@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ClearBank.DeveloperTest.Data;
 using ClearBank.DeveloperTest.Services;
 using ClearBank.DeveloperTest.Types;
@@ -18,7 +19,13 @@ namespace ClearBank.DeveloperTest.Tests
                 .Setup(x => x.GetAccount(It.IsAny<string>()))
                 .Returns(new Account());
 
-            _paymentService = new PaymentService(accountDataStore.Object, new PaymentValidatorFactory());
+            _paymentService = new PaymentService(accountDataStore.Object, new PaymentValidatorFactory(
+                new Dictionary<PaymentScheme, IPaymentValidator>
+                {
+                    { PaymentScheme.Bacs, new BacsPaymentValidator() },
+                    { PaymentScheme.FasterPayments, new FasterPaymentsPaymentValidator() },
+                    { PaymentScheme.Chaps, new ChapsPaymentValidator() }
+                }));
         }
 
         [Fact]

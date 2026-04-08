@@ -5,12 +5,12 @@ namespace ClearBank.DeveloperTest.Services
 {
     public class PaymentValidatorFactory : IPaymentValidatorFactory
     {
-        private readonly Dictionary<PaymentScheme, IPaymentValidator> _validators = new()
+        private readonly IDictionary<PaymentScheme, IPaymentValidator> _validators;
+
+        public PaymentValidatorFactory(IDictionary<PaymentScheme, IPaymentValidator> validators)
         {
-            { PaymentScheme.Bacs, new BacsPaymentValidator() },
-            { PaymentScheme.FasterPayments, new FasterPaymentsPaymentValidator() },
-            { PaymentScheme.Chaps, new ChapsPaymentValidator() }
-        };
+            _validators = validators;
+        }
 
         public IPaymentValidator GetValidator(PaymentScheme paymentScheme)
         {
